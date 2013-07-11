@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This is the splunkClient build file, it builds all files needed and packages them.
+     It makes one jar splunkClient.jar and packages it with other required files into a single
+     archive file com.appdynamics.splunk.splunkClient<version>.zip
+ -->
+<project name="splunkClient" default="compile" basedir=".">
+	<property file="version.properties" />
+	<property name="common-src" location="src/main/java"/>
+	<property name="src" location="src/main/java"/>
+	<property name="build" location="build"/>
+	<property name="classes" location="${build}/classes"/>
+	<property name="docs" location="${build}/docs"/>
+	<property name="dist" location="dist"/>
+	<property name="conf" location="src/main/conf"/>
+	<property name="custom-actions" location="src/main/custom/actions"/>
+	<property name="log4j" location="lib/log4j/log4j-1.2.15.jar"/>
+	<property name="commons-lang" location="lib/commons/commons-lang-2.4.jar"/>
+	<property name="commons-collections" location="lib/commons/commons-collections-3.2.1.jar"/>
+	<property name="splunk" location="lib/splunk/splunk.jar"/>
+	<property name="splunk-logging" location="lib/splunk/splunklogging.jar"/>
+	<property name="apache-license" location="lib/splunk/Apache-LICENSE.txt"/>
+	<property name="splunklogging-license" location="lib/splunk/SplunkLogging-LICENSE.txt"/>
+        <property name="commons-codec" location="lib/axis2/commons-codec-1.3.jar"/>
+	<property environment="env"/>
+    <tstamp>
+            <format property="TODAY" pattern="yyyy-MM-dd HH:mm"/>
+    </tstamp>
+			
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
+		<classpath>
+			<pathelement location="lib/ant-contrib/ant-contrib-1.0b3.jar" />
+		</classpath>
+	</taskdef>
+
+	<target name="init" depends="clean">
+		<mkdir dir="${dist}"/>
+		<mkdir dir="${build}"/>
+		<mkdir dir="${classes}"/>
+		<mkdir dir="${build}/temp"/>
+		<mkdir dir="${build}/temp/custom"/>
+		<mkdir dir="${build}/temp/custom/lib"/>
+		<mkdir dir="${build}/temp/custom/logs"/>
+		<mkdir dir="${build}/temp/custom/conf"/>
+		<mkdir dir="${build}/temp/custom/actions"/>
+		<mkdir dir="${build}/temp/custom/actions/notify-splunk-of-event"/>
+		<mkdir dir="${build}/temp/custom/actions/notify-splunk-of-policy-violation"/>
+	</target>
+
+	<target name="clean">
+		<delete failonerror="true" quiet="true" dir="${dist}"/>
+		<delete failonerror="true" quiet="true" dir="${build}"/>
+	</target>
+
+	<target name="debugcompile">
+        <javac fork="true" destdir="${classes}" source="1.5" target="1.5" debug="on" debuglevel="lines,vars,source" includeantruntime="false">
+		    <src path="${common-src}"/>
+		    <src path="${src}"/>
+		    <classpath>
+                <pathelement location="${log4j}"/>
+                <pathelement location="${commons-codec}"/>
+                <pathelement location="${commons-lang}"/>
+                <pathelement location="${commons-collections}"/>
+                <pathelement location="${splunk}"/>
+                <pathelement location="${splunk-logging}"/>
+		    </classpath>
+            <include name="com/appdynamics/**/*.java"/>
+         </javac>
+	</target>
+	<target name="compile" depends="init">
+        <javac fork="true" destdir="${classes}" source="1.5" target="1.5" debug="off" includeantruntime="false">
+		   <src path="${common-src}"/>
+		   <src path="${src}"/>
+		   <classpath>
+                <pathelement location="${log4j}"/>
+                <pathelement location="${commons-codec}"/>
+                <pathelement location="${commons-lang}"/>
+                <pathelement location="${commons-collections}"/>
+                <pathelement location="${splunk}"/>
+                <pathelement location="${splunk-logging}"/>
+		   </classpath>
+           <include name="com/appdynamics/**/*.java"/>
+        </javac>
+	</target>
+
+    <target name="debugjar" depends="debugcompile">
+	 <jar destfile="${build}/temp/custom/lib/splunkClient.jar">
+            <fileset dir="${classes}"/>
+            <manifest>
+                <attribute name="Implementation-Vendor" value="AppDynamics Inc."/>
+                <attribute name="Implementation-Version" value="Splunk Client v${splunkClient-client-version} ${release} Build Date ${TODAY}"/>
+                <attribute name="Main-Class" value="com.appdynamics.splunk.splunkClient.SendADNotificationToSplunk"/>
+                <attribute name="Class-Path" value="./log4j.xml ./log4j-1.2.15.jar ./commons-lang-2.4.jar ./commons-collections-3.2.1.jar ./splunk.jar ./splunklogging.jar ./commons-codec-1.3.jar"/>
+            </manifest>
+         </jar>
+
+    </target>
+    <target name="jar" depends="compile">
+        <jar destfile="${build}/temp/custom/lib/splunkClient.jar">
+            <fileset dir="${classes}"/>
+                <manifest>
+                    <attribute name="Implementation-Vendor" value="AppDynamics Inc."/>
+                    <attribute name="Implementation-Version" value="Splunk Client v${splunk-client-version} ${release} Build Date ${TODAY}"/>
+                    <attribute name="Main-Class" value="com.appdynamics.splunk.splunkClient.SendADNotificationToSplunk"/>
+                    <attribute name="Class-Path" value="./log4j.xml ./log4j-1.2.15.jar ./commons-lang-2.4.jar ./commons-collections-3.2.1.jar ./splunk.jar ./splunklogging.jar ./commons-codec-1.3.jar"/>
+                </manifest>
+        </jar>
+
+    </target>
+
+    <target name="package" depends="jar">
+        <if>
+            <or>
+                    <os family="unix" />
+                    <os family="mac" />
+            </or>
+        <then>
+            <copy tofile="${build}/temp/custom/actions/custom.xml" file="${custom-actions}/custom.xml.linux" />        </then>
+        <elseif> <os family="windows" />
+        <then>
+            <copy tofile="${build}/temp/custom/actions/custom.xml" file="${custom-actions}/custom.xml.windows" />        </then>
+        </elseif>
+        <else>
+            <then>
+                    <copy tofile="${build}/temp/custom/actions/custom.xml" file="${custom-actions}/custom.xml.linux" />
+            </then>             </else>
+        </if>
+        <copy todir="${build}/temp/custom/actions/notify-splunk-of-event">
+           		<fileset dir="${custom-actions}/notify-splunk-of-event/" includes="notify-splunk-of-event.*"/>
+		</copy>
+		<chmod perm="a+x">
+			<fileset dir="${build}/temp/custom/actions/notify-splunk-of-event" includes="notify-splunk-of-event.*"/>
+		</chmod>
+                <copy todir="${build}/temp/custom/actions/notify-splunk-of-policy-violation">
+			<fileset dir="${custom-actions}/notify-splunk-of-policy-violation/" includes="notify-splunk-of-policy-violation.*"/>
+		</copy>
+		<chmod perm="a+x">
+			<fileset dir="${build}/temp/custom/actions/notify-splunk-of-policy-violation/" includes="notify-splunk-of-policy-violation.*"/>
+		</chmod>
+        <copy todir="${build}/temp/custom/conf/">
+			<fileset file="${conf}/.splunkrc"/>
+            <fileset file="${conf}/log4j.dtd"/>
+            <fileset file="${conf}/log4j.xml"/>
+		</copy>
+        <copy todir="${build}/temp/custom/lib/">
+			<fileset  file="${log4j}"/>
+			<fileset  file="${commons-lang}"/>
+			<fileset  file="${commons-collections}"/>
+			<fileset  file="${splunk}"/>
+			<fileset  file="${splunk-logging}"/>
+                        <fileset  file="${commons-codec}"/>
+			<fileset file="${apache-license}"/>
+			<fileset file="${splunklogging-license}"/>
+		</copy>
+
+        <zip destfile="${dist}/splunkClient-${splunk-client-version}.zip">
+            <zipfileset dir="${build}/temp" filemode="755"/>
+        </zip>
+    </target>
+</project>

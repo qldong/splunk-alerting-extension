@@ -1,0 +1,10 @@
+<custom-actions>
+	<action>
+		<type>notify-splunk-of-event</type>
+		<executable>notify-splunk-of-event.bat</executable>
+	</action>
+	<action>
+		<type>notify-splunk-of-policy-violation</type>
+		<executable>notify-splunk-of-policy-violation.bat</executable>
+	</action>
+</custom-actions>
