@@ -2,8 +2,7 @@
 
 ##Use Case
 
-Splunk [www.splunk.com](http://www.splunk.com) indexes and makes searchable data from any app, server or network device in real time 
-including logs, config files, messages, alerts, scripts and metrics.
+Splunk [www.splunk.com](http://www.splunk.com) indexes and makes searchable data from any app, server or network device in real time including logs, config files, messages, alerts, scripts and metrics.
 
 AppDynamics integrates directly with Splunk to correlate performance degradation with your existing logging infrastructure. With an unsurpassed ability to monitor the performance of mission-critical applications with application diagnostics and infrastructure data, the AppDynamics and Splunk® Enterprise integration accelerates collaboration between Development and Operations teams by improving their ability to identify, troubleshoot and resolve application performance and availability issues.
 
@@ -128,13 +127,15 @@ A sample.splunkrc file is part of the splunkClient zip file.
 
 On an event in the Splunk Search App, click the blue pulldown and choose Launch in AppDynamics. See the screenshot above.
 
-  
 
 ##Contributing
 
-Always feel free to fork and contribute any changes directly via GitHub.
+Always feel free to fork and contribute any changes directly via [GitHub](https://github.com/Appdynamics/splunk-alerting-extension).
 
+##Community
+
+Find out more in the [AppSphere](http://appsphere.appdynamics.com/t5/Extensions/Splunk-Alerting-Extension/idi-p/823) community.
 
 ##Support
 
-For any support questions, please contact ace@appdynamics.com.
+For any questions or feature request, please contact [AppDynamics Center of Excellence](mailto://ace-request@appdynamics.com).
