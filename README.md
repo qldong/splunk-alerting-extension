@@ -1,17 +1,5 @@
 # AppDynamics Splunk Monitoring Extension
 
-* [Use Case](splunk-readme.md#use-case)
-* [Installation](splunk-readme.md#installation)
-* [AppDynamics in Splunk](splunk-readme.md#appdynamics-in-splunk)
-	-   [Metrics](#Splunk-MetricsinSplunk)
-	-   [AppDynamics Notification in Splunk](splunk-readme.md#Splunk-AppDynamicsNotificationinSplunk)
-	-   [Setting up .splunkrc file](splunk-readme.md#Splunk-Settingup.splunkrcfile)
-* [Custom Notifications](splunk-readme.md#custom-notifications)
-* [Custom Notifications in AppDynamics](splunk-readme.md#splunk-custom-notifications-in-appDynamics)
-* [Custom Notifications in Splunk from AppDynamics](splunk-readme.md#custom-notification-in-Splunk-from-AppDynamics)
-* [Launching AppDynamics from Splunk](splunk-readme.md#launching-appDynamics-from-splunk)
-* [Contributing](splunk-readme.md#contributing)
-
 ##Use Case
 
 Splunk [www.splunk.com](http://www.splunk.com) indexes and makes searchable data from any app, server or network device in real time 
@@ -69,12 +57,12 @@ For example, if you want to mine a metric called AverageResponseTime for the Vie
 1.  Launch the AppDynamics App in Splunk.
 2.  Enter index=appdynamics in the Search field of the AppDynamics App in Splunk.  
 
-![](images/splunk1.jpg)
+![](http://appsphere.appdynamics.com/t5/image/serverpage/image-id/75iE92D91F9F93C4D85/image-size/original?v=mpbl-1&px=-1)
 
 
 ##Notifications in Splunk
 
-![](images/emoticons/information.gif) This feature is currently available only for single-tenant Controllers.
+**Note**: This feature is currently available only for single-tenant Controllers.
 
 ###For AppDynamics SaaS customers:
 Contact AppDynamics Support and ask them to extract the splunkClient zip file on your behalf.
@@ -87,7 +75,7 @@ Contact AppDynamics Support and ask them to extract the splunkClient zip file on
 
 2.  Extract the splunkClient zip file to the Controller installation directory on the machine where the AppDynamics Controller is installed
     
-![](images/emoticons/warning.gif) The splunkClient.zip includes a custom.xml file containing notifications. If your Controller already has a custom.xml file, edit it and merge the contents.
+**Note**: The splunkClient.zip includes a custom.xml file containing notifications. If your Controller already has a custom.xml file, edit it and merge the contents.
 
 ##Setting up .splunkrc file
 
@@ -134,7 +122,7 @@ A sample.splunkrc file is part of the splunkClient zip file.
     
 ####Custom Notifications in Splunk from AppDynamics
 
-![](images/AppDNotificationsOnSplunk.jpg)
+![](http://appsphere.appdynamics.com/t5/image/serverpage/image-id/77iE7C5FD5831E6CCE0/image-size/original?v=mpbl-1&px=-1)
 
 ##Launching AppDynamics from Splunk
 
