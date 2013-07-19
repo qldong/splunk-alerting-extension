@@ -1,4 +1,4 @@
-# AppDynamics Splunk Monitoring Extension
+# AppDynamics Splunk Alerting Extension
 
 ##Use Case
 
