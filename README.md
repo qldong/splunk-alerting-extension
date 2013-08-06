@@ -32,9 +32,15 @@ Links within this file go to AppDynamics 3.7 documentation. If you are running a
 - $SPLUNK_HOME is set to the directory where Splunk is installed.
 
 ####Steps
-1.  Download and unpack the tar.gz file.
+1.  Either download and install the Splunk App directly from Splunkbase:
+ 	
+	[AppDynamics on Splunkbase](http://splunk-base.splunk.com/apps/appdynamics)
+ 	
+	Or go to [the Splunk Alerting Extension page on AppSphere](http://appsphere.appdynamics.com/t5/Extensions/Splunk-Alerting-Extension/idi-p/823)
+	and download (right click and select "Save Link As...") and unpack the .spl tarball file at the bottom and extract it to your
+	$SPLUNK_HOME/etc/apps/ directory.
 2.  Locate and edit the file: $SPLUNK_HOME/etc/apps/appdynamics/local/metrics.conf
-2.  Add one section for each individual metric you want to mine from AppDynamics. You need the following:
+3.  Add one section for each individual metric you want to mine from AppDynamics. You need the following:
     -   AppDynamics metric name, to name the section in the metrics.conf file, and for use as as unique identifier in Splunk
     -   REST URL of the metric from the AppDynamics Metric Browser, see the [AppDynamics REST documentation](http://docs.appdynamics.com/display/PRO13S/Use+the+AppDynamics+REST+API)  (login required).
     -   polling interval - how frequently, in seconds, Splunk will run the script to get this metric
