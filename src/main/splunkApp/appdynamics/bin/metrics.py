@@ -54,6 +54,7 @@ class Metric(threading.Thread):
 						out.debug(output)
 					else:		# type == event
 						common_output = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M:%S.%f") + " "
+						common_output += 'name="%s" ' % self._name
 						common_output += 'archived=%s ' % metric['archived']
 						common_output += 'url=%s ' % metric['deepLinkUrl']
 						common_output += 'eventTime=%s ' % metric['eventTime']
