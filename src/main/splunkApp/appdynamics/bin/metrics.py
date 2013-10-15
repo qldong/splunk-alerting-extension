@@ -17,12 +17,13 @@ class Metric(threading.Thread):
 	_url = None
 	_stopping = None
 
-	def __init__(self, name, url, interval, username, password):
+	def __init__(self, name, url, interval, username, password, type):
 		self._interval = interval
 		self._name = name
 		self._url = url
 		self._username = username
 		self._password = password
+		self._type = type
 		self._stopping = False
 
 		threading.Thread.__init__(self)
@@ -39,17 +40,38 @@ class Metric(threading.Thread):
 				parsed = json.loads(content)
 
 				for metric in parsed:
-					output = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M:%S.%f") + " "
-					output += 'name="%s" ' % self._name
-					output += 'frequency=%s ' % metric['frequency']
-					output += 'metricPath="%s" ' % metric['metricPath']
-					output += 'value=%s ' % metric['metricValues'][0]['value']
-					output += 'current=%s ' % metric['metricValues'][0]['current']
-					output += 'min=%s ' % metric['metricValues'][0]['min']
-					output += 'max=%s ' % metric['metricValues'][0]['max']
+					if self._type == 'metric':
+						output = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M:%S.%f") + " "
+						output += 'name="%s" ' % self._name
+						output += 'frequency=%s ' % metric['frequency']
+						output += 'metricPath="%s" ' % metric['metricPath']
+						output += 'value=%s ' % metric['metricValues'][0]['value']
+						output += 'current=%s ' % metric['metricValues'][0]['current']
+						output += 'min=%s ' % metric['metricValues'][0]['min']
+						output += 'max=%s ' % metric['metricValues'][0]['max']
 
-					out = globals()['out']
-					out.debug(output)
+						out = globals()['metric_out']
+						out.debug(output)
+					else:		# type == event
+						common_output = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M:%S.%f") + " "
+						common_output += 'archived=%s ' % metric['archived']
+						common_output += 'url=%s ' % metric['deepLinkUrl']
+						common_output += 'eventTime=%s ' % metric['eventTime']
+						common_output += 'id=%s ' % metric['id']
+						common_output += 'markedAsRead=%s ' % metric['markedAsRead']
+						common_output += 'markedAsResolved=%s ' % metric['markedAsResolved']
+						common_output += 'severity=%s ' % metric['severity']
+						common_output += 'subType=%s ' % metric['subType']
+						common_output += 'summary="%s" ' % metric['summary']
+						common_output += 'triggeredEntity=%s ' % metric['triggeredEntity']
+						common_output += 'type=%s ' % metric['type']
+
+						out = globals()['event_out']
+						for entity in metric['affectedEntities']:
+							output = 'entityId=%s ' % entity['entityId']
+							output += 'entityType=%s ' % entity['entityType']
+
+							out.debug(common_output + output)
 
 				time.sleep(self._interval)
 
@@ -103,13 +125,14 @@ def getMetrics():
 			url = items['url']
 			username = items['username']
 			password = items['password']
+			type = items['type']
 
 			if 'interval' not in items:
 				interval = float(60)
 			else:
 				interval = float(items['interval'])
 
-			metrics.append(Metric(name, url, interval, username, password))
+			metrics.append(Metric(name, url, interval, username, password, type))
 		except Exception, e:
 			logger.error("Parsing error reading metric '%s'.  Error: %s" % (section, e))
 
@@ -129,14 +152,23 @@ if __name__ == '__main__':
 	logger.addHandler(fileHandler)
 	logger.info('AppDynamics Metrics Grabber started')
 
-	out = logging.getLogger('appdynamics_out')
+	metric_out = logging.getLogger('appdynamics_out')
 	formatter = logging.Formatter('%(message)s')
 	handler = logging.handlers.RotatingFileHandler(
 		filename=os.environ['SPLUNK_HOME'] + '/etc/apps/appdynamics/output/metrics.log', maxBytes=25000000,
 		backupCount=5)
 	handler.setFormatter(formatter)
-	out.addHandler(handler)
-	out.setLevel(logging.DEBUG)
+	metric_out.addHandler(handler)
+	metric_out.setLevel(logging.DEBUG)
+
+	event_out = logging.getLogger('appdynamics_out')
+	formatter = logging.Formatter('%(message)s')
+	handler = logging.handlers.RotatingFileHandler(
+		filename=os.environ['SPLUNK_HOME'] + '/etc/apps/appdynamics/output/events.log', maxBytes=25000000,
+		backupCount=5)
+	handler.setFormatter(formatter)
+	event_out.addHandler(handler)
+	event_out.setLevel(logging.DEBUG)
 
 	metrics = getMetrics()
 	for metric in metrics:
