@@ -39,8 +39,8 @@ class Metric(threading.Thread):
 				logger.debug('Response: %s' % content)
 				parsed = json.loads(content)
 
-				for metric in parsed:
-					if self._type == 'metric':
+				if self._type == 'metric':
+					for metric in parsed:
 						output = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M:%S.%f") + " "
 						output += 'name="%s" ' % self._name
 						output += 'frequency=%s ' % metric['frequency']
@@ -52,7 +52,8 @@ class Metric(threading.Thread):
 
 						out = globals()['metric_out']
 						out.debug(output)
-					else:		# type == event
+				else:		# type == event
+					for metric in parsed:
 						common_output = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M:%S.%f") + " "
 						common_output += 'name="%s" ' % self._name
 						common_output += 'archived=%s ' % metric['archived']
