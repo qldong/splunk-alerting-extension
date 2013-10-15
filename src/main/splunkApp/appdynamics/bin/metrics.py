@@ -3,8 +3,10 @@ from ConfigParser import ConfigParser
 import json
 import httplib2
 import threading
-import logging, logging.handlers
-import os, sys
+import logging
+import logging.handlers
+import os
+import sys
 import time
 import datetime
 
@@ -26,7 +28,7 @@ class Metric(threading.Thread):
 		threading.Thread.__init__(self)
 
 	def run(self):
-		while (not self._stopping):
+		while not self._stopping:
 			try:
 				myhttp = httplib2.Http(disable_ssl_certificate_validation=True)
 				myhttp.add_credentials(self._username, self._password)
@@ -53,7 +55,8 @@ class Metric(threading.Thread):
 
 			except Exception, e:
 				import traceback
-				stack =  traceback.format_exc()
+
+				stack = traceback.format_exc()
 				logger.error("Exception received attempting to retrieve metric '%s': %s" % (self._name, e))
 				logger.error("Stack trace for metric '%s': %s" % (self._name, stack))
 				time.sleep(self._interval)
@@ -61,32 +64,37 @@ class Metric(threading.Thread):
 	def stop(self):
 		self._stopping = True
 
+
 # Copied from http://danielkaes.wordpress.com/2009/06/04/how-to-catch-kill-events-with-python/
 def set_exit_handler(func):
 	if os.name == "nt":
 		try:
 			import win32api
+
 			win32api.SetConsoleCtrlHandler(func, True)
 		except ImportError:
 			version = ".".join(map(str, sys.version_info[:2]))
 			raise Exception("pywin32 not installed for Python " + version)
 	else:
 		import signal
+
 		signal.signal(signal.SIGTERM, func)
 		signal.signal(signal.SIGINT, func)
-    
+
+
 def handle_exit(sig=None, func=None):
-    print '\n\nCaught kill, exiting...'
-    for metric in metrics:
-        metric.stop()
-    sys.exit(0)
+	print '\n\nCaught kill, exiting...'
+	for metric in metrics:
+		metric.stop()
+	sys.exit(0)
+
 
 def getMetrics():
 	conf = ConfigParser()
-	conf.read([os.environ['SPLUNK_HOME']+'/etc/apps/appdynamics/local/metrics.conf'])
+	conf.read([os.environ['SPLUNK_HOME'] + '/etc/apps/appdynamics/local/metrics.conf'])
 	sections = conf.sections()
 
-	metrics = [ ]
+	metrics = []
 
 	for section in sections:
 		try:
@@ -107,13 +115,15 @@ def getMetrics():
 
 	return metrics
 
+
 if __name__ == '__main__':
 	# Setup logging
 	logger = logging.getLogger('appdynamics_metrics')
 	logger.propagate = False # Prevent the log messages from being duplicated in the python.log file
 	logger.setLevel(logging.DEBUG)
 	formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-	fileHandler = logging.handlers.RotatingFileHandler(os.environ['SPLUNK_HOME'] + '/var/log/splunk/appdynamics_metrics.log', maxBytes=25000000, backupCount=5)
+	fileHandler = logging.handlers.RotatingFileHandler(
+		os.environ['SPLUNK_HOME'] + '/var/log/splunk/appdynamics_metrics.log', maxBytes=25000000, backupCount=5)
 	formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 	fileHandler.setFormatter(formatter)
 	logger.addHandler(fileHandler)
@@ -121,7 +131,9 @@ if __name__ == '__main__':
 
 	out = logging.getLogger('appdynamics_out')
 	formatter = logging.Formatter('%(message)s')
-	handler = logging.handlers.RotatingFileHandler(filename=os.environ['SPLUNK_HOME']+'/etc/apps/appdynamics/output/metrics.log', maxBytes=25000000, backupCount=5)
+	handler = logging.handlers.RotatingFileHandler(
+		filename=os.environ['SPLUNK_HOME'] + '/etc/apps/appdynamics/output/metrics.log', maxBytes=25000000,
+		backupCount=5)
 	handler.setFormatter(formatter)
 	out.addHandler(handler)
 	out.setLevel(logging.DEBUG)
@@ -131,7 +143,7 @@ if __name__ == '__main__':
 		metric.start()
 
 	set_exit_handler(handle_exit)
-	while (1):
+	while True:
 		try:
 			time.sleep(1.0)
 		except KeyboardInterrupt:
