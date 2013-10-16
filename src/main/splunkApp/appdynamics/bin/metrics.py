@@ -12,24 +12,19 @@ import datetime
 
 
 class Metric(threading.Thread):
-	_interval = None
-	_name = None
-	_url = None
-	_stopping = None
-
-	def __init__(self, name, url, interval, username, password, type):
+	def __init__(self, name, url, interval, username, password):
 		self._interval = interval
 		self._name = name
 		self._url = url
 		self._username = username
 		self._password = password
-		self._type = type
 		self._stopping = False
+		self._event = threading.Event()
 
 		threading.Thread.__init__(self)
 
 	def run(self):
-		while not self._stopping:
+		while not self._event.is_set():
 			try:
 				myhttp = httplib2.Http(disable_ssl_certificate_validation=True)
 				myhttp.add_credentials(self._username, self._password)
@@ -39,54 +34,29 @@ class Metric(threading.Thread):
 				logger.debug('Response: %s' % content)
 				parsed = json.loads(content)
 
-				if self._type == 'metric':
-					for metric in parsed:
-						output = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M:%S.%f") + " "
-						output += 'name="%s" ' % self._name
-						output += 'frequency=%s ' % metric['frequency']
-						output += 'metricPath="%s" ' % metric['metricPath']
-						output += 'value=%s ' % metric['metricValues'][0]['value']
-						output += 'current=%s ' % metric['metricValues'][0]['current']
-						output += 'min=%s ' % metric['metricValues'][0]['min']
-						output += 'max=%s ' % metric['metricValues'][0]['max']
+				for metric in parsed:
+					output = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M:%S.%f") + " "
+					output += 'name="%s" ' % self._name
+					output += 'frequency=%s ' % metric['frequency']
+					output += 'metricPath="%s" ' % metric['metricPath']
+					output += 'value=%s ' % metric['metricValues'][0]['value']
+					output += 'current=%s ' % metric['metricValues'][0]['current']
+					output += 'min=%s ' % metric['metricValues'][0]['min']
+					output += 'max=%s ' % metric['metricValues'][0]['max']
 
-						out = globals()['metric_out']
-						out.debug(output)
-				else:		# type == event
-					for metric in parsed:
-						common_output = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M:%S.%f") + " "
-						common_output += 'name="%s" ' % self._name
-						common_output += 'archived=%s ' % metric['archived']
-						common_output += 'url=%s ' % metric['deepLinkUrl']
-						common_output += 'eventTime=%s ' % metric['eventTime']
-						common_output += 'id=%s ' % metric['id']
-						common_output += 'markedAsRead=%s ' % metric['markedAsRead']
-						common_output += 'markedAsResolved=%s ' % metric['markedAsResolved']
-						common_output += 'severity=%s ' % metric['severity']
-						common_output += 'subType=%s ' % metric['subType']
-						common_output += 'summary="%s" ' % metric['summary']
-						common_output += 'triggeredEntity=%s ' % metric['triggeredEntity']
-						common_output += 'type=%s ' % metric['type']
-
-						out = globals()['event_out']
-						for entity in metric['affectedEntities']:
-							output = 'entityId=%s ' % entity['entityId']
-							output += 'entityType=%s ' % entity['entityType']
-
-							out.debug(common_output + output)
-
-				time.sleep(self._interval)
-
+					out = globals()['out']
+					out.debug(output)
 			except Exception, e:
 				import traceback
 
 				stack = traceback.format_exc()
 				logger.error("Exception received attempting to retrieve metric '%s': %s" % (self._name, e))
 				logger.error("Stack trace for metric '%s': %s" % (self._name, stack))
-				time.sleep(self._interval)
+
+			self._event.wait(self._interval)
 
 	def stop(self):
-		self._stopping = True
+		self._event.set()
 
 
 # Copied from http://danielkaes.wordpress.com/2009/06/04/how-to-catch-kill-events-with-python/
@@ -127,14 +97,13 @@ def getMetrics():
 			url = items['url']
 			username = items['username']
 			password = items['password']
-			type = items['type']
 
 			if 'interval' not in items:
 				interval = float(60)
 			else:
 				interval = float(items['interval'])
 
-			metrics.append(Metric(name, url, interval, username, password, type))
+			metrics.append(Metric(name, url, interval, username, password))
 		except Exception, e:
 			logger.error("Parsing error reading metric '%s'.  Error: %s" % (section, e))
 
@@ -144,7 +113,7 @@ def getMetrics():
 if __name__ == '__main__':
 	# Setup logging
 	logger = logging.getLogger('appdynamics_metrics')
-	logger.propagate = False # Prevent the log messages from being duplicated in the python.log file
+	logger.propagate = False  # Prevent the log messages from being duplicated in the python.log file
 	logger.setLevel(logging.DEBUG)
 	formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 	fileHandler = logging.handlers.RotatingFileHandler(
@@ -154,23 +123,14 @@ if __name__ == '__main__':
 	logger.addHandler(fileHandler)
 	logger.info('AppDynamics Metrics Grabber started')
 
-	metric_out = logging.getLogger('appdynamics_out')
+	out = logging.getLogger('appdynamics_out')
 	formatter = logging.Formatter('%(message)s')
 	handler = logging.handlers.RotatingFileHandler(
 		filename=os.environ['SPLUNK_HOME'] + '/etc/apps/appdynamics/output/metrics.log', maxBytes=25000000,
 		backupCount=5)
 	handler.setFormatter(formatter)
-	metric_out.addHandler(handler)
-	metric_out.setLevel(logging.DEBUG)
-
-	event_out = logging.getLogger('appdynamics_out')
-	formatter = logging.Formatter('%(message)s')
-	handler = logging.handlers.RotatingFileHandler(
-		filename=os.environ['SPLUNK_HOME'] + '/etc/apps/appdynamics/output/events.log', maxBytes=25000000,
-		backupCount=5)
-	handler.setFormatter(formatter)
-	event_out.addHandler(handler)
-	event_out.setLevel(logging.DEBUG)
+	out.addHandler(handler)
+	out.setLevel(logging.DEBUG)
 
 	metrics = getMetrics()
 	for metric in metrics:
@@ -179,6 +139,6 @@ if __name__ == '__main__':
 	set_exit_handler(handle_exit)
 	while True:
 		try:
-			time.sleep(1.0)
+			time.sleep(1)
 		except KeyboardInterrupt:
 			handle_exit()
