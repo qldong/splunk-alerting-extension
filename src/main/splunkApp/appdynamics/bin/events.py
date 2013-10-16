@@ -12,10 +12,6 @@ import datetime
 
 
 class Event(threading.Thread):
-	_interval = None
-	_name = None
-	_url = None
-	_stopping = None
 
 	def __init__(self, name, url, interval, username, password):
 		self._interval = interval
@@ -24,11 +20,12 @@ class Event(threading.Thread):
 		self._username = username
 		self._password = password
 		self._stopping = False
+		self._event = threading.Event()
 
 		threading.Thread.__init__(self)
 
 	def run(self):
-		while not self._stopping:
+		while not self._event.is_set():
 			try:
 				myhttp = httplib2.Http(disable_ssl_certificate_validation=True)
 				myhttp.add_credentials(self._username, self._password)
@@ -59,19 +56,17 @@ class Event(threading.Thread):
 						output += 'entityType=%s ' % entity['entityType']
 
 						out.debug(common_output + output)
-
-				time.sleep(self._interval)
-
 			except Exception, e:
 				import traceback
 
 				stack = traceback.format_exc()
 				logger.error("Exception received attempting to retrieve event '%s': %s" % (self._name, e))
 				logger.error("Stack trace for event '%s': %s" % (self._name, stack))
-				time.sleep(self._interval)
+
+			self._event.wait(self._interval)
 
 	def stop(self):
-		self._stopping = True
+		self._event.set()
 
 
 # Copied from http://danielkaes.wordpress.com/2009/06/04/how-to-catch-kill-events-with-python/
@@ -154,6 +149,6 @@ if __name__ == '__main__':
 	set_exit_handler(handle_exit)
 	while True:
 		try:
-			time.sleep(1.0)
+			time.sleep(1)
 		except KeyboardInterrupt:
 			handle_exit()
