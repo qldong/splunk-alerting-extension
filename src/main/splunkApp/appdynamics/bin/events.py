@@ -11,7 +11,7 @@ import time
 import datetime
 
 
-class Metric(threading.Thread):
+class Event(threading.Thread):
 	_interval = None
 	_name = None
 	_url = None
@@ -33,28 +33,28 @@ class Metric(threading.Thread):
 				myhttp = httplib2.Http(disable_ssl_certificate_validation=True)
 				myhttp.add_credentials(self._username, self._password)
 				url = self._url + '&output=JSON'
-				logger.debug('Requesting metric from url: %s' % url)
+				logger.debug('Requesting event from url: %s' % url)
 				response, content = myhttp.request(url, 'GET')
 				logger.debug('Response: %s' % content)
 				parsed = json.loads(content)
 
-				for metric in parsed:
+				for event in parsed:
 					common_output = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M:%S.%f") + " "
 					common_output += 'name="%s" ' % self._name
-					common_output += 'archived=%s ' % metric['archived']
-					common_output += 'url=%s ' % metric['deepLinkUrl']
-					common_output += 'eventTime=%s ' % metric['eventTime']
-					common_output += 'id=%s ' % metric['id']
-					common_output += 'markedAsRead=%s ' % metric['markedAsRead']
-					common_output += 'markedAsResolved=%s ' % metric['markedAsResolved']
-					common_output += 'severity=%s ' % metric['severity']
-					common_output += 'subType=%s ' % metric['subType']
-					common_output += 'summary="%s" ' % metric['summary']
-					common_output += 'triggeredEntity=%s ' % metric['triggeredEntity']
-					common_output += 'type=%s ' % metric['type']
+					common_output += 'archived=%s ' % event['archived']
+					common_output += 'url=%s ' % event['deepLinkUrl']
+					common_output += 'eventTime=%s ' % event['eventTime']
+					common_output += 'id=%s ' % event['id']
+					common_output += 'markedAsRead=%s ' % event['markedAsRead']
+					common_output += 'markedAsResolved=%s ' % event['markedAsResolved']
+					common_output += 'severity=%s ' % event['severity']
+					common_output += 'subType=%s ' % event['subType']
+					common_output += 'summary="%s" ' % event['summary']
+					common_output += 'triggeredEntity=%s ' % event['triggeredEntity']
+					common_output += 'type=%s ' % event['type']
 
 					out = globals()['out']
-					for entity in metric['affectedEntities']:
+					for entity in event['affectedEntities']:
 						output = 'entityId=%s ' % entity['entityId']
 						output += 'entityType=%s ' % entity['entityType']
 
@@ -67,7 +67,7 @@ class Metric(threading.Thread):
 
 				stack = traceback.format_exc()
 				logger.error("Exception received attempting to retrieve event '%s': %s" % (self._name, e))
-				logger.error("Stack trace for metric '%s': %s" % (self._name, stack))
+				logger.error("Stack trace for event '%s': %s" % (self._name, stack))
 				time.sleep(self._interval)
 
 	def stop(self):
@@ -93,17 +93,17 @@ def set_exit_handler(func):
 
 def handle_exit(sig=None, func=None):
 	print '\n\nCaught kill, exiting...'
-	for metric in metrics:
-		metric.stop()
+	for event in events:
+		event.stop()
 	sys.exit(0)
 
 
-def getMetrics():
+def get_events():
 	conf = ConfigParser()
-	conf.read([os.environ['SPLUNK_HOME'] + '/etc/apps/appdynamics/local/metrics.conf'])
+	conf.read([os.environ['SPLUNK_HOME'] + '/etc/apps/appdynamics/local/events.conf'])
 	sections = conf.sections()
 
-	metrics = []
+	events = []
 
 	for section in sections:
 		try:
@@ -118,11 +118,11 @@ def getMetrics():
 			else:
 				interval = float(items['interval'])
 
-			metrics.append(Metric(name, url, interval, username, password))
+			events.append(Event(name, url, interval, username, password))
 		except Exception, e:
 			logger.error("Parsing error reading event '%s'.  Error: %s" % (section, e))
 
-	return metrics
+	return events
 
 
 if __name__ == '__main__':
@@ -147,9 +147,9 @@ if __name__ == '__main__':
 	out.addHandler(handler)
 	out.setLevel(logging.DEBUG)
 
-	metrics = getMetrics()
-	for metric in metrics:
-		metric.start()
+	events = get_events()
+	for event in events:
+		event.start()
 
 	set_exit_handler(handle_exit)
 	while True:
