@@ -47,6 +47,15 @@ Links within this file go to AppDynamics 3.7 documentation. If you are running a
     -   username and password
         -   for On-Premise or SaaS multi-tenant, <username>@<account> and the password
         -   for On-Premise or SaaS single-tenant, <username>@customer1 and the password
+4.  Locate and edit the file: $SPLUNK_HOME/etc/apps/appdynamics/local/events.conf
+5.  Add one section for each individual event type you want to mine from AppDynamics. You need the following:
+    -   AppDynamics event type, to name the section in the events.conf file, specify the event query for the REST URL, and for use as as unique identifier in Splunk
+    -   AppDynamics event severity, to specify the event query for the REST URL
+    -   REST URL of the event type from the AppDynamics Metric Browser, see the [AppDynamics REST documentation](http://docs.appdynamics.com/display/PRO13S/Use+the+AppDynamics+REST+API#UsetheAppDynamicsRESTAPI-Retrieveeventdata)  (login required).
+    -   polling interval - how frequently, in seconds, Splunk will run the script to get this metric
+    -   username and password
+        -   for On-Premise or SaaS multi-tenant, <username>@<account> and the password
+        -   for On-Premise or SaaS single-tenant, <username>@customer1 and the password
 
 For example, if you want to mine a metric called AverageResponseTime for the ViewCart.sendItems business transaction, the entry would be similar to this:
 
@@ -57,6 +66,15 @@ For example, if you want to mine a metric called AverageResponseTime for the Vie
  	username = user1@customer1  
  	password = welcome
 
+If you want to mine events caused by application errors, the entry would look similar to this:
+
+    [Server.application_Error]  
+  url = http://<controller-host>:<port>/controller/rest/applications/  
+  Acme%20Online%20Book%20Store/events?time-range-type=BEFORE_NOW&duration-in-mins=15&event-types=APPLICATION_ERROR&severities=ERROR  
+  interval = 60  
+  username = user1@customer1  
+  password = welcome
+
 ##Metrics
 
 1.  Launch the AppDynamics App in Splunk.
@@ -64,6 +82,10 @@ For example, if you want to mine a metric called AverageResponseTime for the Vie
 
 ![](http://appsphere.appdynamics.com/t5/image/serverpage/image-id/75iE92D91F9F93C4D85/image-size/original?v=mpbl-1&px=-1)
 
+##Events
+
+1.  Launch the AppDynamics App in Splunk.
+2.  Enter index=appdynamics_events in the Search field of the AppDynamics App in Splunk.  
 
 ##Notifications in Splunk
 
