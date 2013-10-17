@@ -66,11 +66,11 @@ For example, if you want to mine a metric called AverageResponseTime for the Vie
  	username = user1@customer1  
  	password = welcome
 
-If you want to mine events caused by application errors, the entry would look similar to this:
+If you want to mine events caused by application changes, the entry would look similar to this:
 
-    [Server.application_Error]  
+    [Server.application_Changes]  
   url = http://<controller-host>:<port>/controller/rest/applications/  
-  Acme%20Online%20Book%20Store/events?time-range-type=BEFORE_NOW&duration-in-mins=15&event-types=APPLICATION_ERROR&severities=ERROR  
+  Acme%20Online%20Book%20Store/events?time-range-type=BEFORE_NOW&duration-in-mins=15&event-types=APP_SERVER_RESTART,APPLICATION_CONFIG_CHANGE,  APPLICATION_DEPLOYMENT&severities=INFO,WARN,ERROR  
   interval = 60  
   username = user1@customer1  
   password = welcome
